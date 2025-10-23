@@ -1,0 +1,5 @@
+session*
+download/
+venv/
+*__pycache__/
+*.pyc

@@ -6,7 +6,7 @@ from colorama import Fore, Style
 colorama.init()
 
 RED = Fore.RED
-GREEN = Fore.GREEN  
+GREEN = Fore.GREEN
 BLUE = Fore.BLUE
 YELLOW = Fore.YELLOW
 CYAN = Fore.CYAN
@@ -35,5 +35,6 @@ def print_menu() -> None:
     print(CYAN + "3. Clonar Canal/Chat Individual")
     print(BLUE + "4. Clonagem Avançada (com configurações)")
     print(MAGENTA + "5. 🚀 Clonar Supergrupo COMPLETO")
+    print(CYAN + "6. 📥 Baixar mídias (fotos e vídeos)")
     print(WHITE + "0. Sair")
     print("")
