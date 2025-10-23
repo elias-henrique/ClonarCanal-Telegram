@@ -3,15 +3,14 @@
 from lib.menu_handlers import MenuHandlers
 from lib.telegram_client import TCloneClient
 from lib.colors import (
-    print_banner, print_menu, RED, GREEN, YELLOW, CYAN, RESET
+    print_banner, print_menu, RED, GREEN, YELLOW, CYAN
 )
 from lib.config import Config
 import asyncio
 import glob
-import sqlite3
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 sys.path.append(str(Path(__file__).parent / 'lib'))
 
@@ -31,30 +30,6 @@ class TCloneMessenger:
         """Retorna lista de arquivos de sessão disponíveis."""
         return glob.glob("*.session")
 
-    def extract_credentials_from_session(
-        self, session_file: str
-    ) -> Dict[str, Optional[int]]:
-        """Extrai credenciais API do arquivo de sessão SQLite."""
-        try:
-            with sqlite3.connect(session_file) as conn:
-                cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT name FROM sqlite_master WHERE type='table';")
-                tables = [row[0] for row in cursor.fetchall()]
-
-                if 'sessions' in tables:
-                    cursor.execute("SELECT dc_id FROM sessions LIMIT 1;")
-                    result = cursor.fetchone()
-                    if result:
-                        dc_id = result[0]
-                        return {'api_id': self.API_ID_MAP.get(dc_id, 27858)}
-
-            return {'api_id': None}
-
-        except Exception as e:
-            print(f"{RED}Erro ao ler arquivo de sessão: {e}")
-            return {'api_id': None}
-
     def initialize(self) -> bool:
         """Inicializa aplicação com sessão existente ou nova configuração."""
         print_banner()
@@ -71,18 +46,14 @@ class TCloneMessenger:
         print(GREEN + f"Arquivo de sessão encontrado: {session_file}")
         print(YELLOW + "Usando sessão existente...")
 
-        session_info = self.extract_credentials_from_session(session_file)
+        # Usa API ID e HASH padrão; não é necessário ler o .session via SQLite
+        api_id = 27858
+        print(GREEN + f"Usando API ID: {api_id}")
+        api_hash = self.DEFAULT_API_HASH
 
-        if session_info['api_id']:
-            api_id = session_info['api_id']
-            print(GREEN + f"Usando API ID: {api_id}")
-            api_hash = self.DEFAULT_API_HASH
-
-            self.client = TCloneClient(session_name, api_id, api_hash)
-            self.menu_handlers = MenuHandlers(self.client, self.config)
-            return True
-
-        return False
+        self.client = TCloneClient(session_name, api_id, api_hash)
+        self.menu_handlers = MenuHandlers(self.client, self.config)
+        return True
 
     def _initialize_with_new_credentials(self) -> bool:
         """Inicializa com novas credenciais da API."""
@@ -115,23 +86,7 @@ class TCloneMessenger:
 
         return True
 
-    async def get_session_info(self) -> None:
-        """Obtém e exibe informações da sessão ativa."""
-        try:
-            session_data = await self.client.get_session_info()
-            if session_data:
-                first_name = session_data.get('first_name', 'Usuário')
-                username = session_data.get('username', 'N/A')
-                phone = session_data.get('phone', 'N/A')
-                user_id = session_data.get('user_id', 'N/A')
-
-                print(GREEN + f"Conectado como: {first_name} (@{username})")
-                print(CYAN + f"Telefone: {phone}")
-                print(CYAN + f"ID do usuário: {user_id}")
-            else:
-                print(RED + "Falha ao obter informações da sessão")
-        except Exception as e:
-            print(RED + f"Erro na conexão: {e}")
+    # Removido: exibição de informações da sessão ativa por não ser necessária
 
     def get_user_choice(self) -> str:
         """Obtém e retorna escolha do usuário do menu."""
@@ -141,6 +96,9 @@ class TCloneMessenger:
     async def handle_menu_choice(self, choice: str) -> bool:
         """Processa escolha do menu e executa ação correspondente."""
         try:
+            if not self.menu_handlers:
+                print(RED + "Menu não inicializado.")
+                return True
             if choice == "0":
                 print(CYAN + "Saindo...")
                 return False
@@ -171,8 +129,6 @@ class TCloneMessenger:
         """Executa loop principal da aplicação."""
         if not self.initialize():
             return
-
-        await self.get_session_info()
 
         while True:
             try:
