@@ -10,15 +10,14 @@ import shutil
 import colorama
 from colorama import Fore, Style
 try:
-    # Lida corretamente com largura de caracteres unicode (ex.: emojis)
+  
     from wcwidth import wcswidth as _wcswidth
-except Exception:  # fallback se não instalado
-    def _wcswidth(s: str) -> int:  # type: ignore
+except Exception:
+    def _wcswidth(s: str) -> int:
         return len(s)
 
 colorama.init(autoreset=True)
 
-# Cores
 RED = Fore.RED
 GREEN = Fore.GREEN
 BLUE = Fore.BLUE
@@ -27,12 +26,10 @@ CYAN = Fore.CYAN
 MAGENTA = Fore.MAGENTA
 WHITE = Fore.WHITE
 
-# Estilos
 RESET = Style.RESET_ALL
 BRIGHT = Style.BRIGHT
 DIM = Style.DIM
 
-# Regex para remover sequências ANSI (cores/estilos)
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 
 
@@ -73,7 +70,7 @@ def _truncate_visible(s: str, max_cols: int) -> str:
                 continue
         ch = s[i]
         w = _wcswidth(ch)
-        # wcwidth pode retornar -1 para não imprimíveis; trate como 0
+      
         if w < 0:
             w = 0
         if cols + w > max_cols:
@@ -102,7 +99,7 @@ def _frame_bottom(width: int) -> str:
 
 
 def _frame_row(text: str, width: int) -> str:
-    # Garante que o conteúdo caiba visualmente no espaço disponível
+  
     inner_w = width - 2
     content = _truncate_visible(text, inner_w)
     padding = max(0, inner_w - _visible_width(content))
@@ -140,26 +137,26 @@ def print_banner() -> None:
     subtitle = "Sistema de Clonagem de Canais Telegram"
     help_line = "Pegue seu API ID e Hash em: https://my.telegram.org/"
 
-    # Moldura superior
+  
     print(MAGENTA + _frame_line(width) + RESET)
 
-    # Título com 'degradê'
+  
     centered_title = title.center(width - 2)
     print(MAGENTA + "│" + RESET +
           _gradient_text(centered_title) + MAGENTA + "│" + RESET)
 
-    # Separador fino
+  
     print(MAGENTA + _frame_row("".center(width - 2, " "), width) + RESET)
 
-    # Subtítulo
+  
     print(MAGENTA + "│" + RESET + BRIGHT + GREEN +
           subtitle.center(width - 2) + RESET + MAGENTA + "│" + RESET)
 
-    # Linha de ajuda (suave)
+  
     print(MAGENTA + "│" + RESET + DIM + WHITE +
           help_line.center(width - 2) + RESET + MAGENTA + "│" + RESET)
 
-    # Moldura inferior
+  
     print(MAGENTA + _frame_bottom(width) + RESET)
     print("")
 
@@ -172,10 +169,8 @@ def print_menu() -> None:
     options = [
         ("1", GREEN, "Conectar ao Telegram", "🔌"),
         ("2", YELLOW, "Enviar Mensagem", "✉️ "),
-        ("3", CYAN, "Clonar Canal/Chat Individual", "📋"),
-        ("4", BLUE, "Clonagem Avançada (com configurações)", "🧩"),
-        ("5", MAGENTA, "🚀 Clonar Supergrupo COMPLETO", "🚀"),
-        ("6", CYAN, "📥 Baixar mídias (fotos e vídeos)", "📥"),
+        ("3", CYAN, "Clonar Canal/Chat Individual (Completo + Resume)", "�"),
+        ("4", RED, "Baixar mídias (fotos e vídeos)", "📥"),
         ("0", WHITE, "Sair", "⏻"),
     ]
 
@@ -186,9 +181,9 @@ def print_menu() -> None:
     print(MAGENTA + _frame_row("".center(width - 2, " "), width) + RESET)
 
     for key, color, label, icon in options:
-        # Formato: [key] • label
+      
         line_text = f" {BRIGHT}{color}[{key}]{RESET}{color} • {label}"
-        # Alguns terminais mostram melhor sem ícone duplo; manter apenas label decorada
+      
         inner_w = width - 2
         content = _truncate_visible(line_text, inner_w)
         pad = max(0, inner_w - _visible_width(content))

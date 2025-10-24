@@ -109,10 +109,6 @@ class TCloneMessenger:
             elif choice == "3":
                 await self.menu_handlers.handle_clone_channel()
             elif choice == "4":
-                await self.menu_handlers.handle_advanced_clone()
-            elif choice == "5":
-                await self.menu_handlers.handle_supergroup_clone()
-            elif choice == "6":
                 await self.menu_handlers.handle_download_media()
             else:
                 print(RED + "Opção inválida!")

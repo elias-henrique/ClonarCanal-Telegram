@@ -85,14 +85,16 @@ class MenuHandlers:
 
             clone_config = self._get_clone_configuration(source_dialog.name)
 
-            new_channel = await self.cloner.clone_channel(
+            new_channel = await self.cloner.clone_channel_complete(
                 source_dialog,
                 clone_config['title'],
                 clone_config['about'],
                 clone_config['is_public'],
                 clone_config['username'],
                 clone_config['copy_messages'],
-                clone_config['message_limit']
+                clone_config['message_limit'],
+                clone_config['download_media'],
+                clone_config['resume_enabled']
             )
 
             return self._handle_clone_result(new_channel, clone_config)
@@ -102,7 +104,12 @@ class MenuHandlers:
             return False
 
     def _get_clone_configuration(self, source_name: str) -> dict:
-        """Obtém configurações para clonagem."""
+        """Obtém configurações para clonagem completa com resume."""
+        print(GREEN + "🔧 Configuração de Clonagem Completa")
+        print(CYAN + "Esta opção clona TUDO: mensagens, mídias, fotos, vídeos, documentos")
+        print(CYAN + "Inclui funcionalidade de continuar de onde parou (resume)")
+        print()
+
         new_title = input(
             YELLOW + f"Nome do novo canal (padrão: 'Clone de {source_name}'): "
         ) or f"Clone de {source_name}"
@@ -115,27 +122,39 @@ class MenuHandlers:
         if is_public:
             username = input(YELLOW + "Username do canal (sem @): ")
 
-        copy_messages_input = input(
-            YELLOW + "Copiar mensagens? (s/n, padrão: s): ").lower()
-        copy_messages = not copy_messages_input or copy_messages_input.startswith(
-            's')
+        # Sempre copia mensagens na versão completa
+        print(GREEN + "✅ Copiar mensagens: ATIVADO (clonagem completa)")
 
-        message_limit = 100
-        if copy_messages:
-            try:
-                message_limit = int(
-                    input(YELLOW + "Quantas mensagens copiar? (padrão: 100): ") or "100"
-                )
-            except ValueError:
-                message_limit = 100
+        # Limite de mensagens mais alto por padrão
+        try:
+            message_limit = int(
+                input(
+                    YELLOW + "Quantas mensagens copiar? (padrão: TODAS - digite 0): ") or "0"
+            )
+            if message_limit == 0:
+                message_limit = None  # Sem limite = todas as mensagens
+        except ValueError:
+            message_limit = None
+
+        # Configurações de mídia
+        print(GREEN + "✅ Baixar todas as mídias: ATIVADO")
+
+        # Funcionalidade de resume
+        resume_enabled = input(
+            YELLOW +
+            "Ativar modo resume (continuar de onde parou)? (s/n, padrão: s): "
+        ).lower()
+        resume_enabled = not resume_enabled or resume_enabled.startswith('s')
 
         return {
             'title': new_title,
             'about': new_about,
             'is_public': is_public,
             'username': username,
-            'copy_messages': copy_messages,
-            'message_limit': message_limit
+            'copy_messages': True,  # Sempre True na versão completa
+            'message_limit': message_limit,
+            'download_media': True,  # Nova opção
+            'resume_enabled': resume_enabled  # Nova opção
         }
 
     def _handle_clone_result(self, new_channel, config: dict) -> bool:
@@ -148,120 +167,6 @@ class MenuHandlers:
             return True
 
         return False
-
-    async def handle_advanced_clone(self) -> bool:
-        """Handler para clonagem avançada com configurações especiais."""
-        print(GREEN + "Clonagem Avançada - Em desenvolvimento")
-        print(YELLOW + "Esta funcionalidade será implementada em versões futuras")
-        return True
-
-    async def handle_supergroup_clone(self) -> bool:
-        """Handler para clonagem completa de supergrupo."""
-        print(GREEN + "🚀 Clonagem Completa de Supergrupo")
-        print(YELLOW + "Clona supergrupo e todos os canais relacionados")
-
-        try:
-            supergroups = await self.cloner.list_supergroups_only()
-
-            if not supergroups:
-                print(RED + "Nenhum supergrupo encontrado!")
-                return False
-
-            return await self._process_supergroup_cloning(supergroups)
-
-        except Exception as e:
-            print(RED + f"Erro durante a clonagem: {e}")
-            return False
-
-    async def _process_supergroup_cloning(self, supergroups) -> bool:
-        """Processa clonagem completa de supergrupo."""
-        try:
-            choice = int(input(
-                YELLOW + f"Selecione o supergrupo (0-{len(supergroups)-1}): "
-            ))
-
-            if choice < 0 or choice >= len(supergroups):
-                print(RED + "Opção inválida!")
-                return False
-
-            source_dialog = supergroups[choice]
-            print(GREEN + f"Supergrupo selecionado: {source_dialog.name}")
-
-            if not self._confirm_supergroup_operation():
-                return False
-
-            new_base_title = input(
-                YELLOW +
-                f"Nome base (padrão: 'Clone de {source_dialog.name}'): "
-            ) or f"Clone de {source_dialog.name}"
-
-            return await self._execute_supergroup_cloning(source_dialog, new_base_title)
-
-        except ValueError:
-            print(RED + "Por favor, digite um número válido!")
-            return False
-
-    def _confirm_supergroup_operation(self) -> bool:
-        """Confirma operação de clonagem de supergrupo."""
-        print(YELLOW + "⚠️  ATENÇÃO: Esta operação irá:")
-        print(YELLOW + "   • Clonar o supergrupo principal")
-        print(YELLOW + "   • Buscar e clonar todos os canais relacionados")
-        print(YELLOW + "   • Copiar mensagens de todos os canais")
-        print(YELLOW + "   • Pode demorar vários minutos")
-
-        confirm = input(YELLOW + "Continuar? (s/n): ").lower()
-
-        if not confirm.startswith('s'):
-            print(CYAN + "Operação cancelada pelo usuário")
-            return False
-
-        return True
-
-    async def _execute_supergroup_cloning(
-        self, source_dialog, new_base_title: str
-    ) -> bool:
-        """Executa clonagem completa e exibe resultados."""
-        print(CYAN + "🔄 Iniciando clonagem completa...")
-        print(CYAN + "Este processo pode demorar vários minutos...")
-
-        results = await self.cloner.clone_supergroup_with_channels(
-            source_dialog, new_base_title
-        )
-
-        self._display_cloning_results(results)
-
-        return bool(results['main_group'] or results['channels'])
-
-    def _display_cloning_results(self, results: dict) -> None:
-        """Exibe relatório detalhado dos resultados."""
-        print(GREEN + "\n" + "="*50)
-        print(GREEN + "✅ RELATÓRIO DE CLONAGEM COMPLETA")
-        print(GREEN + "="*50)
-
-        if results['main_group']:
-            print(
-                GREEN + f"✅ Supergrupo principal: {results['main_group'].title}")
-        else:
-            print(RED + "❌ Falha ao clonar supergrupo principal")
-
-        if results['channels']:
-            print(GREEN + f"✅ Canais clonados: {len(results['channels'])}")
-            for i, channel in enumerate(results['channels'], 1):
-                print(CYAN + f"   {i}. {channel.title}")
-        else:
-            print(YELLOW + "⚠️  Nenhum canal foi clonado")
-
-        if results['errors']:
-            print(RED + f"❌ Erros encontrados: {len(results['errors'])}")
-            for error in results['errors']:
-                print(RED + f"   • {error}")
-
-        print(GREEN + "="*50)
-
-        if results['main_group'] or results['channels']:
-            print(GREEN + "🎉 Clonagem completa finalizada!")
-        else:
-            print(RED + "❌ Nenhum item foi clonado com sucesso")
 
     async def handle_download_media(self) -> bool:
         """Baixa fotos e vídeos de um ou mais chats/canais."""
