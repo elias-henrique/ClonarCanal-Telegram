@@ -59,7 +59,6 @@ class MediaDownloader:
 
         print(CYAN + f"📥 Baixando mídias de: {title}")
 
-        # Suporte a retomada: ler último ID processado
         progress_path = folder / ".progress.json"
         last_id = 0
         if progress_path.exists():
@@ -67,17 +66,17 @@ class MediaDownloader:
                 data = json.loads(progress_path.read_text(encoding="utf-8"))
                 last_id = int(data.get("last_id", 0))
                 if last_id > 0:
-                    print(YELLOW + f"↻ Retomando a partir da mensagem ID {last_id}")
+                    print(
+                        YELLOW + f"↻ Retomando a partir da mensagem ID {last_id}")
             except Exception:
                 last_id = 0
 
-        # Percorre mensagens do mais antigo ao mais recente
         processed_since_save = 0
         async for msg in self.client.iter_messages(entity, limit=limit, reverse=True, min_id=last_id):
             try:
                 media = msg.media
                 if not media:
-                    # ainda assim avançamos o marcador de progresso
+
                     last_id = max(last_id, getattr(msg, "id", last_id))
                     processed_since_save += 1
                     if processed_since_save >= 50:
@@ -86,7 +85,7 @@ class MediaDownloader:
                     continue
 
                 is_image = bool(getattr(msg, "photo", None))
-                # Vídeo pode ser document com mime_type video/* ou msg.video
+
                 is_video = False
                 if getattr(msg, "video", None):
                     is_video = True
@@ -96,12 +95,11 @@ class MediaDownloader:
                 if (is_image and not want_images) or (is_video and not want_videos):
                     continue
                 if not is_image and not is_video:
-                    # ignora outros tipos de mídia
+
                     continue
 
                 count_total += 1
 
-                # Deixe o Telethon escolher o nome/ extensão correta no diretório
                 result_path = await self.client.download_media(msg, file=str(folder))
                 if result_path:
                     print(GREEN + f"✔ Baixado: {Path(result_path).name}")
@@ -110,7 +108,6 @@ class MediaDownloader:
                     print(YELLOW + "⚠️  Ignorado (já existe ou sem dados)")
                     count_skipped += 1
 
-                # Atualiza progresso após cada mensagem válida
                 last_id = max(last_id, getattr(msg, "id", last_id))
                 processed_since_save += 1
                 if processed_since_save >= 50:
@@ -122,14 +119,13 @@ class MediaDownloader:
             except Exception as e:
                 print(RED + f"❌ Erro ao baixar: {e}")
                 count_errors += 1
-                # Mesmo com erro, avance o progresso para não travar no mesmo item
+
                 last_id = max(last_id, getattr(msg, "id", last_id))
                 processed_since_save += 1
                 if processed_since_save >= 50:
                     self._save_progress(progress_path, last_id)
                     processed_since_save = 0
 
-        # Salva progresso final
         self._save_progress(progress_path, last_id)
 
         print(
@@ -158,7 +154,8 @@ class MediaDownloader:
 
     def _save_progress(self, progress_path: Path, last_id: int) -> None:
         try:
-            progress_path.write_text(json.dumps({"last_id": int(last_id)}), encoding="utf-8")
+            progress_path.write_text(json.dumps(
+                {"last_id": int(last_id)}), encoding="utf-8")
         except Exception:
-            # silenciosamente ignore erros de gravação de progresso
+
             pass

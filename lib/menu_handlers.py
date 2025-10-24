@@ -122,24 +122,20 @@ class MenuHandlers:
         if is_public:
             username = input(YELLOW + "Username do canal (sem @): ")
 
-        # Sempre copia mensagens na versão completa
         print(GREEN + "✅ Copiar mensagens: ATIVADO (clonagem completa)")
 
-        # Limite de mensagens mais alto por padrão
         try:
             message_limit = int(
                 input(
                     YELLOW + "Quantas mensagens copiar? (padrão: TODAS - digite 0): ") or "0"
             )
             if message_limit == 0:
-                message_limit = None  # Sem limite = todas as mensagens
+                message_limit = None
         except ValueError:
             message_limit = None
 
-        # Configurações de mídia
         print(GREEN + "✅ Baixar todas as mídias: ATIVADO")
 
-        # Funcionalidade de resume
         resume_enabled = input(
             YELLOW +
             "Ativar modo resume (continuar de onde parou)? (s/n, padrão: s): "
@@ -151,10 +147,10 @@ class MenuHandlers:
             'about': new_about,
             'is_public': is_public,
             'username': username,
-            'copy_messages': True,  # Sempre True na versão completa
+            'copy_messages': True,
             'message_limit': message_limit,
-            'download_media': True,  # Nova opção
-            'resume_enabled': resume_enabled  # Nova opção
+            'download_media': True,
+            'resume_enabled': resume_enabled
         }
 
     def _handle_clone_result(self, new_channel, config: dict) -> bool:
@@ -180,7 +176,6 @@ class MenuHandlers:
                 print(RED + "Nenhum chat/canal encontrado")
                 return False
 
-            # Listagem resumida
             print(YELLOW + "Chats/Canais disponíveis:")
             for idx, d in enumerate(dialogs):
                 name = getattr(d, 'name', None) or getattr(
@@ -202,7 +197,6 @@ class MenuHandlers:
                     print(RED + "Entrada inválida")
                     return False
 
-            # Tipos de mídia
             print(YELLOW + "Tipos: 1) Imagens  2) Vídeos  3) Ambos (padrão)")
             tsel = input(YELLOW + "Escolha (1/2/3): ").strip()
             if tsel == "1":
@@ -212,7 +206,6 @@ class MenuHandlers:
             else:
                 media_types = ("image", "video")
 
-            # Limite de mensagens a inspecionar
             lraw = input(
                 YELLOW + "Limite de mensagens a verificar (Enter = sem limite): ").strip()
             limit = None
@@ -222,14 +215,12 @@ class MenuHandlers:
                 except ValueError:
                     print(RED + "Limite inválido, usando sem limite")
 
-            # Diretório de download
             base_dir = input(
                 YELLOW + f"Diretório base (padrão: {self.config.download_dir}): ").strip() or self.config.download_dir
 
             downloader = MediaDownloader(self.client.client, base_dir)
             results = await downloader.download_from_dialogs(selected, media_types=media_types, limit=limit)
 
-            # Resumo geral
             total_downloaded = sum(r["downloaded"] for r in results)
             total_errors = sum(r["errors"] for r in results)
             print(
