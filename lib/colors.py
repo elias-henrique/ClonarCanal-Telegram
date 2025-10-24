@@ -133,7 +133,7 @@ def print_banner() -> None:
     clear_screen()
     width = _term_width()
 
-    title = "TClone Messenger"
+    title = "Telegrabber"
     subtitle = "Sistema de Clonagem de Canais Telegram"
     help_line = "Pegue seu API ID e Hash em: https://my.telegram.org/"
 

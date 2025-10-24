@@ -1,4 +1,4 @@
-"""Módulo de configuração do sistema TClone."""
+"""Módulo de configuração do sistema Telegrabber."""
 
 import json
 import os

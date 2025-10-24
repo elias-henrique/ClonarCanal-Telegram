@@ -8,7 +8,7 @@ from telethon import TelegramClient
 from .colors import RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA, RESET
 
 
-class TCloneClient:
+class TelegrabberClient:
     """Cliente principal para operações do Telegram."""
 
     def __init__(self, session_name: str, api_id: int, api_hash: str) -> None:

@@ -3,7 +3,7 @@
 import asyncio
 from typing import Optional
 
-from .telegram_client import TCloneClient
+from .telegram_client import TelegrabberClient
 from .cloner import ChannelCloner
 from .config import Config
 from .downloader import MediaDownloader
@@ -13,7 +13,7 @@ from .colors import RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA, RESET
 class MenuHandlers:
     """Gerenciador de handlers do menu principal."""
 
-    def __init__(self, client: TCloneClient, config: Config) -> None:
+    def __init__(self, client: TelegrabberClient, config: Config) -> None:
         self.client = client
         self.config = config
         self.cloner = ChannelCloner(client.client)
